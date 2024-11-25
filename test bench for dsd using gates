@@ -48,3 +48,50 @@ module logic_gates_tb;
     end
 
 endmodule
+
+
+
+
+
+
+
+
+
+code for dsd using verilog
+
+// Verilog code for basic logic gates
+
+module logic_gates (
+    input wire a,    // Input A
+    input wire b,    // Input B
+    output wire and_out,  // Output for AND gate
+    output wire or_out,   // Output for OR gate
+    output wire not_out,  // Output for NOT gate
+    output wire nand_out, // Output for NAND gate
+    output wire nor_out,  // Output for NOR gate
+    output wire xor_out,  // Output for XOR gate
+    output wire xnor_out  // Output for XNOR gate
+);
+
+    // AND gate
+    assign and_out = a & b;
+
+    // OR gate
+    assign or_out = a | b;
+
+    // NOT gate (only requires one input)
+    assign not_out = ~a;
+
+    // NAND gate
+    assign nand_out = ~(a & b);
+
+    // NOR gate
+    assign nor_out = ~(a | b);
+
+    // XOR gate
+    assign xor_out = a ^ b;
+
+    // XNOR gate
+    assign xnor_out = ~(a ^ b);
+
+endmodule
