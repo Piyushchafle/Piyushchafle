@@ -1,0 +1,111 @@
+`timescale 1ns / 1ps
+
+module fsm_sequence_detector (
+    input wire clk,        // Clock signal
+    input wire reset,      // Reset signal
+    input wire in,         // Serial input
+    output reg detected    // Output: 1 when sequence is detected
+);
+
+    // State encoding
+    typedef enum reg [1:0] {
+        IDLE = 2'b00,      // Initial state
+        S1   = 2'b01,      // State after receiving '1'
+        S10  = 2'b10,      // State after receiving '10'
+        S101 = 2'b11       // State after receiving '101'
+    } state_t;
+
+    state_t current_state, next_state;
+
+    // State transition logic
+    always @(posedge clk or posedge reset) begin
+        if (reset) 
+            current_state <= IDLE;
+        else 
+            current_state <= next_state;
+    end
+
+    // Next-state logic and output logic
+    always @(*) begin
+        // Default outputs
+        next_state = current_state;
+        detected = 1'b0;
+
+        case (current_state)
+            IDLE: begin
+                if (in)
+                    next_state = S1;
+            end
+            S1: begin
+                if (~in)
+                    next_state = S10;
+                else
+                    next_state = S1;
+            end
+            S10: begin
+                if (in)
+                    next_state = S101;
+                else
+                    next_state = IDLE;
+            end
+            S101: begin
+                detected = 1'b1; // Sequence detected
+                if (~in)
+                    next_state = S10;
+                else
+                    next_state = S1;
+            end
+            default: next_state = IDLE;
+        endcase
+    end
+
+endmodule
+
+// Testbench for the FSM
+module fsm_sequence_detector_tb;
+
+    // Testbench signals
+    reg clk;
+    reg reset;
+    reg in;
+    wire detected;
+
+    // Instantiate the FSM module
+    fsm_sequence_detector uut (
+        .clk(clk),
+        .reset(reset),
+        .in(in),
+        .detected(detected)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // 10ns clock period
+    end
+
+    // Test stimulus
+    initial begin
+        // Initialize inputs
+        reset = 1;
+        in = 0;
+        #10;
+
+        // Release reset
+        reset = 0;
+
+        // Input sequence: 101 (detected), 1101 (detected at last 101), 100
+        in = 1; #10; // Start with '1'
+        in = 0; #10; // '10'
+        in = 1; #10; // '101' - sequence detected
+
+        in = 1; #10; // Start new sequence
+        in = 0; #10; // '10'
+        in = 1; #10; // '101' - sequence detected
+
+        in = 0; #10; // '100' - no detection
+
+        $stop; // End simulation
+    end
+
+endmodule
